@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import Loader from "./Loader";
 
-interface ButtonProps extends React.HTMLAttributes<HTMLElement> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant: "outlined" | "contained" | "text";
   link?: string;
   className?: string;
@@ -37,7 +37,12 @@ const Button: React.FC<ButtonProps> = ({
   } ${variant === "text" ? text : ""} ${className}`;
 
   const btn = (
-    <button className={classes} disabled={loading || disabled} {...rest}>
+    <button
+      className={classes}
+      disabled={loading || disabled}
+      aria-disabled={loading || disabled}
+      {...rest}
+    >
       {loading && (
         <Loader
           className={`${
@@ -56,15 +61,18 @@ const Button: React.FC<ButtonProps> = ({
     </button>
   );
 
-  if (link && target)
-    return (
-      <a href={link} target={target} rel="noreferrer">
-        {btn}
-      </a>
-    );
-  else if (link) return <Link to={link}>{btn}</Link>;
+  if (link) {
+    if (target) {
+      return (
+        <a href={link} target={target} rel="noreferrer">
+          {btn}
+        </a>
+      );
+    }
+    return <Link to={link}>{btn}</Link>;
+  }
 
   return btn;
 };
 
-export default Button;
+export default React.memo(Button);

@@ -6,26 +6,44 @@ interface InputProps extends React.HTMLAttributes<HTMLInputElement> {
   label?: string;
   type?: string;
   id?: string;
+  required?: boolean;
 }
 
-const Input: React.FC<InputProps> = ({ label, type, id, ...rest }) => {
+const Input: React.FC<InputProps> = ({
+  label,
+  type,
+  id,
+  required,
+  ...rest
+}) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
   const switchVisibility = useCallback(() => {
     setIsVisible((prevState) => !prevState);
-  }, [isVisible]);
+  }, []);
 
   return (
-    <div>
-      {label && <label htmlFor={id}>{label}</label>}
-      <div className="border-1 border-gray-300 flex align-center focus-within:outline-2 focus-within:outline-blue-300">
+    <div className="flex flex-col gap-2">
+      {label && (
+        <label htmlFor={id}>
+          {label} {required && "*"}
+        </label>
+      )}
+      <div className="border border-gray-300 flex align-center focus-within:outline-2 focus-within:outline-blue-300">
         <input
           {...rest}
           className="w-full px-2 focus:outline-none"
           type={isVisible ? "text" : type}
+          required={required}
+          autoComplete={type === "password" ? "new-password" : "on"}
         />
         {type === "password" && (
-          <Button variant="text" onClick={switchVisibility}>
+          <Button
+            type="button"
+            variant="text"
+            onClick={switchVisibility}
+            aria-label={isVisible ? "Hide password" : "Show password"}
+          >
             {isVisible ? <EyeOff /> : <Eye />}
           </Button>
         )}
@@ -34,4 +52,4 @@ const Input: React.FC<InputProps> = ({ label, type, id, ...rest }) => {
   );
 };
 
-export default Input;
+export default React.memo(Input);
