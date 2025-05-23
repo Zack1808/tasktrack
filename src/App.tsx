@@ -1,35 +1,43 @@
 import React, { useState } from "react";
 
-import Select, { SelectOptions } from "./components/Select";
-
-const options = [
-  { label: "Hello", value: "hello" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-  { label: "Hello2", value: "hello2" },
-];
+import Modal from "./components/Modal";
+import Button from "./components/Button";
 
 const App: React.FC = () => {
-  const [testState, setTestState] = useState<SelectOptions | undefined>(
-    options[0]
-  );
+  const [testState, setTestState] = useState<boolean>(false);
 
   return (
-    <div className="w-full h-[100svh] flex ">
-      <Select
-        options={options}
-        onChange={(value) => setTestState(value)}
-        value={testState}
-        label="Hello"
-        id="Hello"
-      />
+    <div className="">
+      <Button
+        variant="contained"
+        onClick={() => setTestState((prevState) => !prevState)}
+      >
+        Open Modal
+      </Button>
+      <Button
+        variant="contained"
+        onClick={() => setTestState((prevState) => !prevState)}
+      >
+        Open Modal
+      </Button>
+      <Button
+        variant="contained"
+        onClick={() => setTestState((prevState) => !prevState)}
+      >
+        Open Modal
+      </Button>
+      <Modal
+        title="Title"
+        isOpen={testState}
+        closeModal={() => setTestState(false)}
+      >
+        <Button variant="contained">click</Button>
+        <Button variant="contained">click</Button>
+        <Button variant="contained">click</Button>
+        <Button variant="contained">click</Button>
+        <Button variant="contained">click</Button>
+        <Button variant="contained">click</Button>
+      </Modal>
     </div>
   );
 };
