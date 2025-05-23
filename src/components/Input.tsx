@@ -29,7 +29,7 @@ const Input: React.FC<InputProps> = ({
           {label} {required && "*"}
         </label>
       )}
-      <div className="border border-gray-300 flex align-center focus-within:outline-2 focus-within:outline-blue-300">
+      <div className="border border-gray-300 flex align-center focus-within:outline-2 focus-within:outline-blue-300 rounded-sm">
         <input
           {...rest}
           className="w-full px-2 focus:outline-none"
