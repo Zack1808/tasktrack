@@ -10,7 +10,7 @@ interface SelectProps {
   options: SelectOptions[];
   value?: SelectOptions;
   label?: string;
-  id?: string;
+  id: string;
   onChange: (value: SelectOptions | undefined) => void;
 }
 
