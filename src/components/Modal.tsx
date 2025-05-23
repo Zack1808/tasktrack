@@ -30,8 +30,8 @@ const Modal: React.FC<ModalProps> = ({
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (isOpen) lastFocusedRef.current?.focus();
-        lastFocusedRef.current = null;
         closeModal();
+        lastFocusedRef.current = null;
       }
 
       if (!modalRef.current) return;
@@ -74,13 +74,19 @@ const Modal: React.FC<ModalProps> = ({
 
   return ReactDOM.createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? "modal-title" : undefined}
       ref={modalRef}
       className={`bg-black/40 fixed inset-0 flex items-center justify-center p-4 duration-250 ${
         isOpen ? "opacity-100" : "opacity-0"
       } ${isOpen ? "visible" : "invisible"}`}
       onClick={handleBackgroundClick}
     >
-      <div className="bg-white p-4 rounded-md w-full max-w-4xl flex flex-col gap-6">
+      <div
+        tabIndex={-1}
+        className="bg-white p-4 rounded-md w-full max-w-4xl flex flex-col gap-6"
+      >
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-2xl">{title}</h2>
           <Button variant="text" onClick={closeModal}>
@@ -94,4 +100,4 @@ const Modal: React.FC<ModalProps> = ({
   );
 };
 
-export default Modal;
+export default React.memo(Modal);
