@@ -49,7 +49,11 @@ const Modal: React.FC<ModalProps> = ({
         if (event.key === "Tab") {
           if (!focusedList.includes(document.activeElement as HTMLElement)) {
             lastFocusedRef.current = document.activeElement as HTMLElement;
-            first.focus();
+            if (event.shiftKey) {
+              last.focus();
+            } else {
+              first.focus();
+            }
           } else if (event.shiftKey) {
             if (document.activeElement === first) {
               event.preventDefault();
@@ -88,7 +92,9 @@ const Modal: React.FC<ModalProps> = ({
         className="bg-white p-4 rounded-md w-full max-w-4xl flex flex-col gap-6"
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-2xl">{title}</h2>
+          <h2 id="modal-title" className="font-semibold text-2xl">
+            {title}
+          </h2>
           <Button variant="text" onClick={closeModal}>
             <X />
           </Button>
