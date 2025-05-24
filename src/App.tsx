@@ -1,44 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Modal from "./components/Modal";
-import Button from "./components/Button";
+import Sidebar from "./components/Sidebar";
 
 const App: React.FC = () => {
-  const [testState, setTestState] = useState<boolean>(false);
-
   return (
-    <div className="">
-      <Button
-        variant="contained"
-        onClick={() => setTestState((prevState) => !prevState)}
-      >
-        Open Modal
-      </Button>
-      <Button
-        variant="contained"
-        onClick={() => setTestState((prevState) => !prevState)}
-      >
-        Open Modal
-      </Button>
-      <Button
-        variant="contained"
-        onClick={() => setTestState((prevState) => !prevState)}
-      >
-        Open Modal
-      </Button>
-      <Modal
-        title="Title"
-        isOpen={testState}
-        closeModal={() => setTestState(false)}
-      >
-        <Button variant="contained">click</Button>
-        <Button variant="contained">click</Button>
-        <Button variant="contained">click</Button>
-        <Button variant="contained">click</Button>
-        <Button variant="contained">click</Button>
-        <Button variant="contained">click</Button>
-      </Modal>
-    </div>
+    <BrowserRouter>
+      <Sidebar logo={<h2 className="font-semibold text-2xl">Logo</h2>}>
+        Hello
+      </Sidebar>
+    </BrowserRouter>
   );
 };
 
