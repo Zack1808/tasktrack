@@ -32,7 +32,7 @@ const SideBarItem: React.FC<SidebarItemProps> = React.memo(
         >
           {icon}{" "}
           <span
-            className={` overflow-hidden transition-all duration-50 ${
+            className={` overflow-clip transition-all duration-50 ${
               sidebarExpanded ? "ml-3 w-full" : "w-0"
             }`}
           >

@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
 
     const sidebarRef = useRef<HTMLDivElement>(null);
 
-    const colors = useMemo(() => getColorFromInitials("Jean-Pierre Novak"), []);
+    const colors = useMemo(() => getColorFromInitials("John Doe"), []);
 
     const handleBackgroundClick = useCallback((event: React.MouseEvent) => {
       if (!sidebarRef.current) return;
@@ -66,14 +66,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
         onClick={handleBackgroundClick}
       >
         <nav
-          className={`h-full flex flex-col bg-white shadow-md w-max -translate-x-full  ${
+          className={`h-full flex flex-col bg-white shadow-md w-max ${
+            sidebarExpanded ? "min-w-3xs max-w-2xs" : ""
+          } -translate-x-full  ${
             visible ? "translate-x-0 delay-100 duration-200" : "duration-100"
           } md:-translate-0`}
         >
           <div className="p-4 pb-15 flex justify-between items-center">
             <Link
               to="/dashboard"
-              className={`overflow-hidden transition-all duration-50  ${
+              className={`overflow-clip transition-all duration-50  ${
                 sidebarExpanded ? "w-full" : "w-0"
               }`}
             >
@@ -115,17 +117,17 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
               }}
               className={`p-3 rounded-lg font-bold w-10 h-10 flex items-center justify-center`}
             >
-              JN
+              JD
             </span>
             <div
-              className={`flex flex-col justify-between h-10 overflow-hidden transition-all duration-50  ${
+              className={`flex flex-col justify-between h-10 overflow-clip transition-all duration-50  ${
                 sidebarExpanded ? "w-full ml-4" : "w-0 "
               }`}
             >
               <div className="leading-5">
-                <p className="font-semibold">Jean-Pierre Novak</p>
+                <p className="font-semibold">John Doe</p>
                 <small className="text-xs text-gray-600 font-extralight">
-                  jeanpierrenovak23@gmail.com
+                  jdoe@gmail.com
                 </small>
               </div>
             </div>
