@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LayoutList } from "lucide-react";
 
-import { Sidebar, SideBarItem } from "./components/Sidebar";
+import Sidebar from "./components/Sidebar";
+import SideBarItem from "./components/SidebarItem";
 import Button from "./components/Button";
 
 const App: React.FC = () => {
