@@ -26,12 +26,12 @@ const Button: React.FC<ButtonProps> = ({
   const outlined = `border-2 border-blue-500 text-blue-500 ${
     loading || disabled ? "" : "hover:bg-gray-200"
   }`;
-  const contained = `border-2 bg-blue-500 text-white ${
+  const contained = `border-2 border-blue-500 bg-blue-500 text-white ${
     loading || disabled ? "" : "hover:bg-blue-600"
   }`;
   const text = "text-blue-500";
 
-  const classes = `px-6 py-2 rounded-md cursor-pointer duration-100 ease-in flex gap-2 items-center
+  const classes = `px-4 py-1.5 rounded-md cursor-pointer duration-100 ease-in flex gap-2 items-center
   ${variant === "contained" ? contained : ""} ${
     variant === "outlined" ? outlined : ""
   } ${variant === "text" ? text : ""} ${className}`;

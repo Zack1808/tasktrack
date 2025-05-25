@@ -42,100 +42,101 @@ export const SidebarContext = React.createContext<
   SidebarContextType | undefined
 >(undefined);
 
-export const Sidebar: React.FC<SidebarProps> = React.memo(
-  ({ logo, children, visible, closeSidebar }) => {
-    const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
+export const Sidebar: React.FC<SidebarProps> = ({
+  logo,
+  children,
+  visible,
+  closeSidebar,
+}) => {
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
 
-    const sidebarRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
-    const colors = useMemo(() => getColorFromInitials("John Doe"), []);
+  const colors = useMemo(() => getColorFromInitials("John Doe"), []);
 
-    const handleBackgroundClick = useCallback((event: React.MouseEvent) => {
-      if (!sidebarRef.current) return;
-      if (event.target === sidebarRef.current) closeSidebar();
-    }, []);
+  const handleBackgroundClick = useCallback((event: React.MouseEvent) => {
+    if (!sidebarRef.current) return;
+    if (event.target === sidebarRef.current) closeSidebar();
+  }, []);
 
-    return (
-      <aside
-        className={`h-screen absolute w-full bg-black/20 z-50 md:w-max md:sticky md:bg-transparent transition-all duration-100 ${
-          visible
-            ? "visible opacity-100"
-            : "invisible opacity-0 delay-100 md:visible md:opacity-100"
-        }`}
-        ref={sidebarRef}
-        onClick={handleBackgroundClick}
+  return (
+    <aside
+      className={`h-screen absolute w-full top-0 bg-black/20 z-50 md:w-max md:sticky md:bg-transparent transition-all duration-100 ${
+        visible
+          ? "visible opacity-100"
+          : "invisible opacity-0 delay-100 md:visible md:opacity-100"
+      }`}
+      ref={sidebarRef}
+      onClick={handleBackgroundClick}
+    >
+      <nav
+        className={`h-full flex flex-col bg-white shadow-md w-max ${
+          sidebarExpanded ? "min-w-3xs max-w-2xs" : ""
+        } -translate-x-full  ${
+          visible ? "translate-x-0 delay-100 duration-200" : "duration-100"
+        } md:-translate-0`}
       >
-        <nav
-          className={`h-full flex flex-col bg-white shadow-md w-max ${
-            sidebarExpanded ? "min-w-3xs max-w-2xs" : ""
-          } -translate-x-full  ${
-            visible ? "translate-x-0 delay-100 duration-200" : "duration-100"
-          } md:-translate-0`}
-        >
-          <div className="p-4 pb-15 flex justify-between items-center">
-            <Link
-              to="/dashboard"
-              className={`overflow-clip transition-all duration-50  ${
-                sidebarExpanded ? "w-full" : "w-0"
-              }`}
-            >
-              {logo}
-            </Link>
-            <Button
-              variant="text"
-              className="px-2! hidden md:flex"
-              aria-label={
-                sidebarExpanded ? "Colapse sidebar" : "Expand sidebar"
-              }
-              onClick={() => setSidebarExpanded((prevState) => !prevState)}
-            >
-              {sidebarExpanded ? <ChevronFirst /> : <ChevronLast />}
-            </Button>
-            <Button
-              variant="text"
-              className="px-2! md:hidden"
-              aria-label="Close sidebar"
-              onClick={() => closeSidebar()}
-            >
-              <X />
-            </Button>
-          </div>
-          <SidebarContext.Provider
-            value={{ sidebarExpanded, setSidebarExpanded }}
-          >
-            <ul className="flex-1 px-4 ">{children}</ul>
-          </SidebarContext.Provider>
+        <div className="p-4 pb-15 flex justify-between items-center">
           <Link
-            to={`/dashboard/user`}
-            className="border-t border-gray-200 flex shadow-md px-4 py-3"
-            onClick={closeSidebar}
+            to="/dashboard"
+            className={`overflow-clip transition-all duration-50  ${
+              sidebarExpanded ? "w-full" : "w-0"
+            }`}
           >
-            <span
-              style={{
-                backgroundColor: colors.backgroundColor,
-                color: colors.textColor,
-              }}
-              className={`p-3 rounded-lg font-bold w-10 h-10 flex items-center justify-center`}
-            >
-              JD
-            </span>
-            <div
-              className={`flex flex-col justify-between h-10 overflow-clip transition-all duration-50  ${
-                sidebarExpanded ? "w-full ml-4" : "w-0 "
-              }`}
-            >
-              <div className="leading-5">
-                <p className="font-semibold">John Doe</p>
-                <small className="text-xs text-gray-600 font-extralight">
-                  jdoe@gmail.com
-                </small>
-              </div>
-            </div>
+            {logo}
           </Link>
-        </nav>
-      </aside>
-    );
-  }
-);
+          <Button
+            variant="text"
+            className="px-2! hidden md:flex"
+            aria-label={sidebarExpanded ? "Colapse sidebar" : "Expand sidebar"}
+            onClick={() => setSidebarExpanded((prevState) => !prevState)}
+          >
+            {sidebarExpanded ? <ChevronFirst /> : <ChevronLast />}
+          </Button>
+          <Button
+            variant="text"
+            className="px-2! md:hidden"
+            aria-label="Close sidebar"
+            onClick={() => closeSidebar()}
+          >
+            <X />
+          </Button>
+        </div>
+        <SidebarContext.Provider
+          value={{ sidebarExpanded, setSidebarExpanded }}
+        >
+          <ul className="flex-1 px-4 ">{children}</ul>
+        </SidebarContext.Provider>
+        <Link
+          to={`/dashboard/user`}
+          className="border-t border-gray-200 flex shadow-md px-4 py-3"
+          onClick={closeSidebar}
+        >
+          <span
+            style={{
+              backgroundColor: colors.backgroundColor,
+              color: colors.textColor,
+            }}
+            className={`p-3 rounded-lg font-bold w-10 h-10 flex items-center justify-center`}
+          >
+            JD
+          </span>
+          <div
+            className={`flex flex-col justify-between h-10 overflow-clip transition-all duration-50  ${
+              sidebarExpanded ? "w-full ml-4" : "w-0 "
+            }`}
+          >
+            <div className="leading-5">
+              <p className="font-semibold">John Doe</p>
+              <small className="text-xs text-gray-600 font-extralight">
+                jdoe@gmail.com
+              </small>
+            </div>
+          </div>
+        </Link>
+      </nav>
+    </aside>
+  );
+};
 
-export default Sidebar;
+export default React.memo(Sidebar);
