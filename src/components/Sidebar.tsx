@@ -1,91 +1,181 @@
-import React from "react";
-import { ChevronFirst } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext, useRef, useCallback } from "react";
+import { ChevronFirst, ChevronLast, X } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 import Button from "./Button";
 
 interface SidebarProps {
   logo?: React.ReactNode;
   children: React.ReactNode;
+  visible: boolean;
+  closeSidebar: () => void;
 }
+
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  label: string;
+  link: string;
+  closeSidebar: () => void;
+}
+
+type SidebarContextType = {
+  sidebarExpanded: boolean;
+  setSidebarExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
 type ColorResult = {
   backgroundColor: string;
   textColor: "black" | "white";
 };
 
-function getColorFromInitials(initials: string): ColorResult {
-  // Generate hash from initials
+function getColorFromInitials(input: string): ColorResult {
   let hash = 0;
-  for (let i = 0; i < initials.length; i++) {
-    hash = initials.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < input.length; i++) {
+    hash = input.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
   }
-  hash = Math.abs(hash);
 
-  // Convert hash to HSL
-  const hue = hash % 360;
-  const saturation = 70;
-  const lightness = 80;
+  const hue = Math.abs(hash) % 360;
+  const saturation = 50 + (Math.abs(hash >> 3) % 36);
+  const lightness = 30 + (Math.abs(hash >> 5) % 51);
 
-  // HSL to RGB conversion
-  const s = saturation / 100;
-  const l = lightness / 100;
-  const k = (n: number) => (n + hue / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) =>
-    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-  const r = Math.round(f(0) * 255);
-  const g = Math.round(f(8) * 255);
-  const b = Math.round(f(4) * 255);
-
-  const backgroundColor = `rgb(${r}, ${g}, ${b})`;
-
-  // Brightness for contrast text color
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  const textColor: "black" | "white" = brightness > 128 ? "black" : "white";
+  const backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const textColor = lightness < 50 ? "white" : "black";
 
   return { backgroundColor, textColor };
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ logo, children }) => {
-  const colors = getColorFromInitials("JN");
+const SidebarContext = React.createContext<SidebarContextType | undefined>(
+  undefined
+);
 
-  return (
-    <aside className="h-screen  max-w-xs">
-      <nav className="h-full flex flex-col bg-white shadow-md">
-        <div className="p-4 pb-15 flex justify-between items-center">
-          <Link to="/dashboard">{logo}</Link>{" "}
-          <Button variant="text" className="px-2!">
-            <ChevronFirst />
-          </Button>
-        </div>
-        <ul className="flex-1 px-4">{children}</ul>
-        <Link
-          to={`/dashboard/user`}
-          className="border-t border-gray-200 flex shadow-md px-4 py-3"
+export const Sidebar: React.FC<SidebarProps> = React.memo(
+  ({ logo, children, visible, closeSidebar }) => {
+    const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
+
+    const sidebarRef = useRef<HTMLDivElement>(null);
+
+    const colors = getColorFromInitials("Jean-Pierre Novak");
+
+    const handleBackgroundClick = useCallback((event: React.MouseEvent) => {
+      if (!sidebarRef.current) return;
+      if (event.target === sidebarRef.current) closeSidebar();
+    }, []);
+
+    return (
+      <aside
+        className={`h-screen absolute w-full bg-black/20 z-50 md:w-max md:sticky md:bg-transparent transition-all duration-100 ${
+          visible
+            ? "visible opacity-100"
+            : "invisible opacity-0 delay-100 md:visible md:opacity-100"
+        }`}
+        ref={sidebarRef}
+        onClick={handleBackgroundClick}
+      >
+        <nav
+          className={`h-full flex flex-col bg-white shadow-md w-max -translate-x-full  ${
+            visible ? "translate-x-0 delay-100 duration-200" : "duration-100"
+          } md:-translate-0`}
         >
-          <span
-            style={{
-              backgroundColor: colors.backgroundColor,
-              color: colors.textColor,
-            }}
-            className={`p-3 rounded-lg font-bold w-10 h-10 flex items-center justify-center`}
-          >
-            JN
-          </span>
-          <div className="flex flex-col justify-between items-betwe w-full ml-4">
-            <div className="leading-5">
-              <p className="font-semibold">Jean-Pierre Novak</p>
-              <small className="text-xs text-gray-600 font-extralight">
-                jeanpierrenovak23@gmail.com
-              </small>
-            </div>
+          <div className="p-4 pb-15 flex justify-between items-center">
+            <Link
+              to="/dashboard"
+              className={`overflow-hidden transition-all duration-50  ${
+                sidebarExpanded ? "w-full" : "w-0"
+              }`}
+            >
+              {logo}
+            </Link>{" "}
+            <Button
+              variant="text"
+              className="px-2! hidden md:flex"
+              onClick={() => setSidebarExpanded((prevState) => !prevState)}
+            >
+              {sidebarExpanded ? <ChevronFirst /> : <ChevronLast />}
+            </Button>
+            <Button
+              variant="text"
+              className="px-2! md:hidden"
+              onClick={() => closeSidebar()}
+            >
+              <X />
+            </Button>
           </div>
-        </Link>
-      </nav>
-    </aside>
-  );
-};
+          <SidebarContext.Provider
+            value={{ sidebarExpanded, setSidebarExpanded }}
+          >
+            <ul className="flex-1 px-4 ">{children}</ul>
+          </SidebarContext.Provider>
+          <Link
+            to={`/dashboard/user`}
+            className="border-t border-gray-200 flex shadow-md px-4 py-3"
+            onClick={closeSidebar}
+          >
+            <span
+              style={{
+                backgroundColor: colors.backgroundColor,
+                color: colors.textColor,
+              }}
+              className={`p-3 rounded-lg font-bold w-10 h-10 flex items-center justify-center`}
+            >
+              JN
+            </span>
+            <div
+              className={`flex flex-col justify-between h-10 overflow-hidden transition-all duration-50  ${
+                sidebarExpanded ? "w-full ml-4" : "w-0 "
+              }`}
+            >
+              <div className="leading-5">
+                <p className="font-semibold">Jean-Pierre Novak</p>
+                <small className="text-xs text-gray-600 font-extralight">
+                  jeanpierrenovak23@gmail.com
+                </small>
+              </div>
+            </div>
+          </Link>
+        </nav>
+      </aside>
+    );
+  }
+);
 
-export default Sidebar;
+export const SideBarItem: React.FC<SidebarItemProps> = React.memo(
+  ({ icon, label, link, closeSidebar }) => {
+    const location = useLocation();
+
+    const context = useContext(SidebarContext);
+
+    if (!context) return;
+
+    const { sidebarExpanded } = context;
+
+    return (
+      <li onClick={closeSidebar}>
+        <Link
+          to={link}
+          className={`group relative flex items-center py-2 px-3 font-medium my-1 rounded-md cursor-pointer transition-all ${
+            location.pathname === link
+              ? "bg-gradient-to-tr from-blue-100 to-blue-200 text-blue-700 "
+              : "hover:bg-blue-50 text-gray-600"
+          }`}
+        >
+          {icon}{" "}
+          <span
+            className={` overflow-hidden transition-all duration-50 ${
+              sidebarExpanded ? "ml-3 w-full" : "w-0"
+            }`}
+          >
+            {label}
+          </span>
+          {!sidebarExpanded && (
+            <div
+              className={`absolute left-full rounded-md px-2 py-1 ml-8 text-blue-700 text-sm bg-blue-100 invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0`}
+            >
+              {label}
+            </div>
+          )}
+        </Link>
+      </li>
+    );
+  }
+);
