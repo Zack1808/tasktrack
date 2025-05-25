@@ -1,4 +1,10 @@
-import React, { useState, useContext, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useContext,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { ChevronFirst, ChevronLast, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -55,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
 
     const sidebarRef = useRef<HTMLDivElement>(null);
 
-    const colors = getColorFromInitials("Jean-Pierre Novak");
+    const colors = useMemo(() => getColorFromInitials("Jean-Pierre Novak"), []);
 
     const handleBackgroundClick = useCallback((event: React.MouseEvent) => {
       if (!sidebarRef.current) return;
@@ -85,10 +91,13 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
               }`}
             >
               {logo}
-            </Link>{" "}
+            </Link>
             <Button
               variant="text"
               className="px-2! hidden md:flex"
+              aria-label={
+                sidebarExpanded ? "Colapse sidebar" : "Expand sidebar"
+              }
               onClick={() => setSidebarExpanded((prevState) => !prevState)}
             >
               {sidebarExpanded ? <ChevronFirst /> : <ChevronLast />}
@@ -96,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
             <Button
               variant="text"
               className="px-2! md:hidden"
+              aria-label="Close sidebar"
               onClick={() => closeSidebar()}
             >
               <X />
