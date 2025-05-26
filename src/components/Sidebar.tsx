@@ -70,8 +70,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onClick={handleBackgroundClick}
     >
       <nav
-        className={`h-full flex flex-col bg-white shadow-md w-max ${
-          sidebarExpanded ? "min-w-3xs max-w-2xs" : ""
+        className={`h-full flex flex-col bg-white shadow-md  ${
+          sidebarExpanded ? "w-3xs" : "w-max"
         } -translate-x-full  ${
           visible ? "translate-x-0 delay-100 duration-200" : "duration-100"
         } md:-translate-0`}
