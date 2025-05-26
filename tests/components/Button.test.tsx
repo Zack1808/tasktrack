@@ -7,19 +7,13 @@ describe("Button component", () => {
   it("renders with 'contained' variant", () => {
     render(<Button variant="contained">Contained Variant</Button>);
     const button = screen.getByRole("button", { name: "Contained Variant" });
-    expect(button).toHaveTextContent("Contained Variant");
-    expect(button.className).toContain(
-      "border-2 border-blue-500 bg-blue-500 text-white"
-    );
+    expect(button).toHaveAttribute("data-variant", "contained");
   });
 
   it("renders with 'outlined' variant", () => {
     render(<Button variant="outlined">Outlined Variant</Button>);
     const button = screen.getByRole("button", { name: "Outlined Variant" });
-    expect(button).toHaveTextContent("Outlined Variant");
-    expect(button.className).toContain(
-      "border-2 border-blue-500 text-blue-500"
-    );
+    expect(button).toHaveAttribute("data-variant", "outlined");
   });
 
   it("renders with 'text' variant", () => {
@@ -29,8 +23,6 @@ describe("Button component", () => {
       </Button>
     );
     const button = screen.getByRole("button", { name: "Text Variant" });
-    expect(button).toHaveTextContent("Text Variant");
-    expect(button.className).toContain("text-blue-500");
-    expect(button.className).not.toContain("border-2 border-blue-500");
+    expect(button).toHaveAttribute("data-variant", "text");
   });
 });

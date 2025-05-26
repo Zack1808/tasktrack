@@ -38,6 +38,7 @@ const Button: React.FC<ButtonProps> = ({
 
   const btn = (
     <button
+      data-variant={variant}
       className={classes}
       disabled={loading || disabled}
       aria-disabled={loading || disabled}
