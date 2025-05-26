@@ -34,7 +34,7 @@ const Button: React.FC<ButtonProps> = ({
   const classes = `px-4 py-1.5 rounded-md cursor-pointer duration-100 ease-in flex gap-2 items-center
   ${variant === "contained" ? contained : ""} ${
     variant === "outlined" ? outlined : ""
-  } ${variant === "text" ? text : ""} ${className}`;
+  } ${variant === "text" ? text : ""} ${className ? className : ""}`;
 
   const btn = (
     <button
