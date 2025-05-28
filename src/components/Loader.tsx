@@ -8,6 +8,7 @@ interface LoaderProps {
 const Loader: React.FC<LoaderProps> = ({ className, fill }) => {
   return (
     <div
+      data-testid="loader"
       className={`aspect-square rounded-full grid items-center justify-items-center animate-spin ${className}`}
     >
       <div className={`w-[80%] aspect-square rounded-full ${fill}`}></div>
