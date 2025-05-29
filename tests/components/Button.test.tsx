@@ -5,110 +5,110 @@ import Button from "../../src/components/Button";
 import "@testing-library/jest-dom/vitest";
 
 describe("Button component", () => {
+  const buttonText = "Click me!";
+
   it("should render with 'contained' variant", () => {
-    render(<Button variant="contained">Contained Variant</Button>);
-    const button = screen.getByRole("button", { name: "Contained Variant" });
+    const { container } = render(
+      <Button variant="contained">{buttonText}</Button>
+    );
+    const button = within(container).getByRole("button");
     expect(button).toHaveAttribute("data-variant", "contained");
   });
 
   it("should render with 'outlined' variant", () => {
-    render(<Button variant="outlined">Outlined Variant</Button>);
-    const button = screen.getByRole("button", { name: "Outlined Variant" });
+    const { container } = render(
+      <Button variant="outlined">{buttonText}</Button>
+    );
+    const button = within(container).getByRole("button");
     expect(button).toHaveAttribute("data-variant", "outlined");
   });
 
   it("should render with 'text' variant", () => {
-    render(
+    const { container } = render(
       <Button variant="text" name="text-button">
-        Text Variant
+        {buttonText}
       </Button>
     );
-    const button = screen.getByRole("button", { name: "Text Variant" });
+    const button = within(container).getByRole("button");
     expect(button).toHaveAttribute("data-variant", "text");
   });
 
   it("should render a Link button when link prop is provided", () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <Button variant="text" link="/home">
-          Button with Link component
+          {buttonText}
         </Button>
       </MemoryRouter>
     );
-    const link = screen.getByRole("link", {
-      name: "Button with Link component",
-    });
+    const link = within(container).getByRole("link");
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/home");
     expect(link).not.toHaveAttribute("target", "_blank");
   });
 
   it("should render an anchor tag when link and target are provided", () => {
-    render(
+    const { container } = render(
       <Button variant="text" link="https://example.com" target="_blank">
-        Button with Anchor tag
+        {buttonText}
       </Button>
     );
-    const anchor = screen.getByRole("link", { name: "Button with Anchor tag" });
+    const anchor = within(container).getByRole("link");
     expect(anchor).toBeInTheDocument();
     expect(anchor).toHaveAttribute("href", "https://example.com");
     expect(anchor).toHaveAttribute("target", "_blank");
   });
 
   it("should be disabled when 'disabled' prop is true", () => {
-    render(
+    const { container } = render(
       <Button variant="contained" disabled>
-        Disabled Button
+        {buttonText}
       </Button>
     );
-    const button = screen.getByRole("button", {
-      name: "Disabled Button",
-    });
+    const button = within(container).getByRole("button");
     expect(button).toBeDisabled();
   });
 
   it("should be disabled when 'loading' prop is true and should show loader", () => {
-    render(
+    const { container } = render(
       <Button variant="contained" loading>
-        Loading Button
+        {buttonText}
       </Button>
     );
-    const button = screen.getByRole("button", {
-      name: "Loading Button",
-    });
+    const button = within(container).getByRole("button");
     expect(button).toBeDisabled();
     expect(within(button).getByTestId("loader")).toBeInTheDocument();
   });
 
   it("should not show loader if loading is not true", () => {
-    render(<Button variant="contained">Button Not Loading</Button>);
-    const button = screen.getByRole("button", {
-      name: "Button Not Loading",
-    });
+    const { container } = render(
+      <Button variant="contained">{buttonText}</Button>
+    );
+    const button = within(container).getByRole("button");
 
     expect(button).not.toBeDisabled();
     expect(within(button).queryByTestId("loader")).not.toBeInTheDocument();
   });
 
   it("should apply custom className", () => {
-    render(
+    const { container } = render(
       <Button variant="contained" className="custom-class">
-        New ClassName
+        {buttonText}
       </Button>
     );
-    const button = screen.getByRole("button", { name: "New ClassName" });
+    const button = within(container).getByRole("button");
     expect(button.className).toContain("custom-class");
   });
 
   it("should call onClick when button is clicked", () => {
     const handleClick = vi.fn();
-    render(
+    const { container } = render(
       <Button variant="contained" onClick={handleClick}>
-        With Onclick
+        {buttonText}
       </Button>
     );
 
-    const button = screen.getByRole("button", { name: "With Onclick" });
+    const button = within(container).getByRole("button");
     fireEvent.click(button);
 
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -116,13 +116,13 @@ describe("Button component", () => {
 
   it("should not call onClick when loading", () => {
     const handleClick = vi.fn();
-    render(
+    const { container } = render(
       <Button variant="contained" loading onClick={handleClick}>
-        Loading with OnClick
+        {buttonText}
       </Button>
     );
 
-    const button = screen.getByRole("button", { name: "Loading with OnClick" });
+    const button = within(container).getByRole("button");
 
     fireEvent.click(button);
 

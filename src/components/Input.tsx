@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useId } from "react";
 import Button from "./Button";
 import { Eye, EyeOff } from "lucide-react";
 
-interface InputProps extends React.HTMLAttributes<HTMLInputElement> {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   type?: string;
   id?: string;
@@ -18,6 +18,9 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
+  const internalId = useId();
+  const inputId = id ?? internalId;
+
   const switchVisibility = useCallback(() => {
     setIsVisible((prevState) => !prevState);
   }, []);
@@ -25,7 +28,7 @@ const Input: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label htmlFor={id}>
+        <label htmlFor={inputId}>
           {label} {required && "*"}
         </label>
       )}
@@ -35,10 +38,12 @@ const Input: React.FC<InputProps> = ({
           className="w-full px-2 focus:outline-none"
           type={isVisible ? "text" : type}
           required={required}
+          id={inputId}
           autoComplete={type === "password" ? "new-password" : "on"}
         />
         {type === "password" && (
           <Button
+            data-testid="password-visibility"
             type="button"
             variant="text"
             onClick={switchVisibility}
