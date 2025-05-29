@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useId } from "react";
 import { ChevronDown } from "lucide-react";
 
 export interface SelectOptions {
@@ -26,6 +26,8 @@ const Select: React.FC<SelectProps> = ({
   const [optionsListPosition, setOptionsListPosition] =
     useState<string>("top-full mt-1");
 
+  const componentID = id ?? useId();
+
   const selectRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLUListElement>(null);
   const itemsRef = useRef<(HTMLLIElement | null)[]>([]);
@@ -47,12 +49,8 @@ const Select: React.FC<SelectProps> = ({
   );
 
   const handleLabelClick = useCallback(() => {
-    if (id) {
-      if (id === selectRef.current?.id) {
-        selectRef.current?.focus();
-        setDropdownOpen(true);
-      }
-    }
+    selectRef.current?.focus();
+    setDropdownOpen(true);
   }, []);
 
   const checkSpaceBeneathDropdown = useCallback(() => {
@@ -125,7 +123,7 @@ const Select: React.FC<SelectProps> = ({
   return (
     <div className="flex w-full flex-col gap-2 mb-20">
       {label && (
-        <label htmlFor={id} onClick={handleLabelClick}>
+        <label htmlFor={componentID} onClick={handleLabelClick}>
           {label}
         </label>
       )}
@@ -134,14 +132,14 @@ const Select: React.FC<SelectProps> = ({
         tabIndex={0}
         onClick={toggleDropdown}
         onBlur={closeDropdown}
-        id={id}
+        id={componentID}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={dropdownOpen}
-        aria-controls={`${id}-options`}
+        aria-controls={`${componentID}-options`}
         aria-activedescendant={
           dropdownOpen && options[highlightedIndex]
-            ? `${id}-option-${highlightedIndex}`
+            ? `${componentID}-option-${highlightedIndex}`
             : undefined
         }
         className="relative w-full border border-gray-300 rounded-sm flex items-center p-2 focus:outline focus:outline-blue-300"
@@ -152,7 +150,7 @@ const Select: React.FC<SelectProps> = ({
         </span>
         <ul
           role="listbox"
-          id={`${id}-options`}
+          id={`${componentID}-options`}
           ref={optionsRef}
           className={`absolute ${optionsListPosition} border border-gray-300 rounded-sm w-full left-0 bg-white z-50 max-h-60 overflow-auto ${
             dropdownOpen ? "block" : "hidden"
@@ -162,7 +160,7 @@ const Select: React.FC<SelectProps> = ({
             <li
               key={option.value}
               role="option"
-              id={`${id}-option-${index}`}
+              id={`${componentID}-option-${index}`}
               aria-selected={value === option}
               onMouseEnter={() => setHighligthedIndex(index)}
               className={`p-2 cursor-pointer ${

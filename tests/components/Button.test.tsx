@@ -128,4 +128,44 @@ describe("Button component", () => {
 
     expect(handleClick).not.toHaveBeenCalled();
   });
+
+  it("should be accessable with keyboard", () => {
+    const handleClick = vi.fn();
+
+    const { container } = render(
+      <Button variant="contained" onClick={handleClick}>
+        {buttonText}
+      </Button>
+    );
+
+    const button = within(container).getByRole("button");
+
+    button.focus();
+    expect(button).toHaveFocus();
+
+    fireEvent.keyDown(button, { key: "Enter" });
+    fireEvent.click(button);
+
+    fireEvent.keyDown(button, { key: " " });
+    fireEvent.click(button);
+
+    const unrelatedKeys = [
+      "Escape",
+      "ArrowDown",
+      "ArrowUp",
+      "Tab",
+      "a",
+      "z",
+      "Shift",
+      "1",
+      "9",
+    ];
+
+    unrelatedKeys.forEach((key) => {
+      fireEvent.keyDown(button, { key });
+      fireEvent.keyUp(button, { key });
+    });
+
+    expect(handleClick).toHaveBeenCalledTimes(2);
+  });
 });
