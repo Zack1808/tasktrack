@@ -10,7 +10,7 @@ interface SelectProps {
   options: SelectOptions[];
   value?: SelectOptions;
   label?: string;
-  id: string;
+  id?: string;
   onChange: (value: SelectOptions | undefined) => void;
 }
 
@@ -144,35 +144,38 @@ const Select: React.FC<SelectProps> = ({
         }
         className="relative w-full border border-gray-300 rounded-sm flex items-center p-2 focus:outline focus:outline-blue-300"
       >
-        <span className="w-full">{value?.label}</span>
+        <span className="w-full" data-testid="select-value">
+          {value?.label}
+        </span>
         <span>
           <ChevronDown className="text-gray-400" />
         </span>
-        <ul
-          role="listbox"
-          id={`${componentID}-options`}
-          ref={optionsRef}
-          className={`absolute ${optionsListPosition} border border-gray-300 rounded-sm w-full left-0 bg-white z-50 max-h-60 overflow-auto ${
-            dropdownOpen ? "block" : "hidden"
-          }`}
-        >
-          {options.map((option, index) => (
-            <li
-              key={option.value}
-              role="option"
-              id={`${componentID}-option-${index}`}
-              aria-selected={value === option}
-              onMouseEnter={() => setHighligthedIndex(index)}
-              className={`p-2 cursor-pointer ${
-                value === option ? "bg-blue-200" : ""
-              } ${highlightedIndex === index ? "bg-blue-300" : ""}`}
-              onClick={(event) => handleOptionSelect(option, event)}
-              ref={(item) => (itemsRef.current[index] = item)}
-            >
-              {option.label}
-            </li>
-          ))}
-        </ul>
+        {dropdownOpen && (
+          <ul
+            role="listbox"
+            id={`${componentID}-options`}
+            ref={optionsRef}
+            className={`absolute ${optionsListPosition} border border-gray-300 rounded-sm w-full left-0 bg-white z-50 max-h-60 overflow-auto`}
+          >
+            {options.map((option, index) => (
+              <li
+                key={option.value}
+                data-highlighted={index === highlightedIndex}
+                role="option"
+                id={`${componentID}-option-${index}`}
+                aria-selected={value === option}
+                onMouseEnter={() => setHighligthedIndex(index)}
+                className={`p-2 cursor-pointer ${
+                  value === option ? "bg-blue-200" : ""
+                } ${highlightedIndex === index ? "bg-blue-300" : ""}`}
+                onClick={(event) => handleOptionSelect(option, event)}
+                ref={(item) => (itemsRef.current[index] = item)}
+              >
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

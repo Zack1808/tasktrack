@@ -1,9 +1,12 @@
 import { it, expect, describe } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import Input from "../../src/components/Input";
 import "@testing-library/jest-dom/vitest";
 
 describe("Input component", () => {
+  const user = userEvent.setup();
+
   it("should render without crashing", () => {
     const { container } = render(<Input />);
 
@@ -41,7 +44,7 @@ describe("Input component", () => {
     expect(button).not.toBeInTheDocument();
   });
 
-  it("should toggle the password visibility if the toggle password visibility button is pressed", () => {
+  it("should toggle the password visibility if the toggle password visibility button is pressed", async () => {
     const { container } = render(<Input type="password" label="Password" />);
 
     const input = within(container).getByLabelText(
@@ -52,12 +55,12 @@ describe("Input component", () => {
     expect(input.type).toBe("password");
     expect(toggleButton).toHaveAccessibleName("Show password");
 
-    fireEvent.click(toggleButton);
+    await user.click(toggleButton);
 
     expect(input.type).toBe("text");
     expect(toggleButton).toHaveAccessibleName("Hide password");
 
-    fireEvent.click(toggleButton);
+    await user.click(toggleButton);
 
     expect(input.type).toBe("password");
     expect(toggleButton).toHaveAccessibleName("Show password");

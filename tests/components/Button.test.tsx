@@ -1,11 +1,13 @@
 import { it, expect, describe, vi } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import userEvent from "@testing-library/user-event";
 import Button from "../../src/components/Button";
 import "@testing-library/jest-dom/vitest";
 
 describe("Button component", () => {
   const buttonText = "Click me!";
+  const user = userEvent.setup();
 
   it("should render with 'contained' variant", () => {
     const { container } = render(
@@ -100,7 +102,7 @@ describe("Button component", () => {
     expect(button.className).toContain("custom-class");
   });
 
-  it("should call onClick when button is clicked", () => {
+  it("should call onClick when button is clicked", async () => {
     const handleClick = vi.fn();
     const { container } = render(
       <Button variant="contained" onClick={handleClick}>
@@ -109,12 +111,12 @@ describe("Button component", () => {
     );
 
     const button = within(container).getByRole("button");
-    fireEvent.click(button);
+    await user.click(button);
 
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
-  it("should not call onClick when loading", () => {
+  it("should not call onClick when loading", async () => {
     const handleClick = vi.fn();
     const { container } = render(
       <Button variant="contained" loading onClick={handleClick}>
@@ -124,12 +126,12 @@ describe("Button component", () => {
 
     const button = within(container).getByRole("button");
 
-    fireEvent.click(button);
+    await user.click(button);
 
     expect(handleClick).not.toHaveBeenCalled();
   });
 
-  it("should be accessable with keyboard", () => {
+  it("should be accessable with keyboard", async () => {
     const handleClick = vi.fn();
 
     const { container } = render(
@@ -143,11 +145,9 @@ describe("Button component", () => {
     button.focus();
     expect(button).toHaveFocus();
 
-    fireEvent.keyDown(button, { key: "Enter" });
-    fireEvent.click(button);
+    await user.keyboard("{Enter}");
 
-    fireEvent.keyDown(button, { key: " " });
-    fireEvent.click(button);
+    await user.keyboard("{ }");
 
     const unrelatedKeys = [
       "Escape",
@@ -161,10 +161,10 @@ describe("Button component", () => {
       "9",
     ];
 
-    unrelatedKeys.forEach((key) => {
-      fireEvent.keyDown(button, { key });
-      fireEvent.keyUp(button, { key });
-    });
+    for (const key of unrelatedKeys) {
+      button.focus();
+      await user.keyboard(`{${key}}`);
+    }
 
     expect(handleClick).toHaveBeenCalledTimes(2);
   });
