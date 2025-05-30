@@ -5,13 +5,10 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
 describe("Select component", () => {
-  const items = [
-    { label: "value 1", value: 1 },
-    { label: "value 2", value: 2 },
-    { label: "value 3", value: 3 },
-    { label: "value 4", value: 4 },
-    { label: "value 5", value: 5 },
-  ];
+  const items = Array.from({ length: 50 }, (_, i) => ({
+    label: `Option ${i + 1}`,
+    value: `${i + 1}`,
+  }));
 
   beforeAll(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -133,6 +130,31 @@ describe("Select component", () => {
     expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
   });
 
+  it("should open the dropdown when the up or down arrow keys have been pressed", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    select.focus();
+    expect(select).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+
+    let dropdown = within(container).getByRole("listbox");
+    expect(dropdown).toBeInTheDocument();
+
+    await user.keyboard("{ }");
+
+    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.keyboard("{ArrowUp}");
+
+    dropdown = within(container).getByRole("listbox");
+    expect(dropdown).toBeInTheDocument();
+  });
+
   it("should highlight the currently focused option with the arrow keys", async () => {
     const { container } = render(
       <Select options={items} onChange={() => {}} />
@@ -172,9 +194,42 @@ describe("Select component", () => {
 
     select.focus();
     await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Enter}");
+
+    expect(handleSelect).toHaveBeenCalledWith(items[0]);
+  });
+
+  it("should not call the onChange if the the option is the same as the current value", async () => {
+    const handleSelect = vi.fn();
+
+    const { container } = render(
+      <Select options={items} value={items[0]} onChange={handleSelect} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    select.focus();
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{Enter}");
 
-    expect(handleSelect).toHaveBeenCalledWith(items[1]);
+    expect(handleSelect).not.toHaveBeenCalled();
+  });
+
+  it("should scroll to highlighted option if it is out of view", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    const options = await within(container).findAllByRole("option");
+
+    options.forEach((item) => (item.scrollIntoView = vi.fn()));
+
+    for (let i = 0; i < 20; i++) await user.keyboard("{ArrowDown}");
+
+    expect(options[19].scrollIntoView).toHaveBeenCalled();
   });
 });
