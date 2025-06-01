@@ -16,6 +16,87 @@ describe("Select component", () => {
 
   const user = userEvent.setup();
 
+  it("should use the correct ARIA roles", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+    expect(select).toBeInTheDocument();
+
+    expect(within(select).queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.click(select);
+
+    const dropdown = within(container).getByRole("listbox");
+    expect(dropdown).toBeInTheDocument();
+
+    const options = within(dropdown).getAllByRole("option");
+    expect(options).toHaveLength(items.length);
+
+    expect(options[0]).toHaveTextContent(items[0].label);
+    expect(options[1]).toHaveTextContent(items[1].label);
+  });
+
+  it("should have the correct aria-expanded, aria-controls and aria-activedescendant", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    expect(select).toHaveAttribute("aria-expanded", "false");
+    expect(select).not.toHaveAttribute("aria-activedescendant");
+
+    await user.click(select);
+
+    expect(select).toHaveAttribute("aria-expanded", "true");
+
+    const dropdown = within(container).getByRole("listbox");
+    const dropdownId = dropdown.getAttribute("id");
+    expect(dropdownId).toBeTruthy();
+    expect(select).toHaveAttribute("aria-controls", dropdownId);
+
+    await user.keyboard("{ArrowDown}");
+
+    const activeDescendant = select.getAttribute("aria-activedescendant");
+    expect(activeDescendant).toBeTruthy();
+
+    const highlightedOption = container.querySelector(
+      '[data-highlighted="true"]'
+    );
+
+    expect(highlightedOption?.id).toBe(activeDescendant);
+  });
+
+  it("should have an aria-selected on every option", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    const options = within(container).getAllByRole("option");
+
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-selected");
+    });
+  });
+
+  it("should be focusable when tab is pressed", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    await user.tab();
+
+    const select = within(container).getByRole("combobox");
+
+    expect(select).toHaveFocus();
+  });
+
   it("should render without label", () => {
     const { container } = render(
       <Select options={items} onChange={() => {}} />
@@ -231,5 +312,90 @@ describe("Select component", () => {
     for (let i = 0; i < 20; i++) await user.keyboard("{ArrowDown}");
 
     expect(options[19].scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("should open dropdown upwards when there is not enough space", async () => {
+    window.innerHeight = 500;
+
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+      top: 450,
+      bottom: 470,
+      height: 20,
+      width: 200,
+      left: 0,
+      right: 200,
+      x: 0,
+      y: 450,
+      toJSON: () => {},
+    }));
+
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get() {
+        return 100;
+      },
+    });
+
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    const dropdown = await within(container).findByRole("listbox");
+
+    expect(dropdown.className).toMatch(/bottom-full/);
+  });
+
+  it("should open dropdown downwards when there is not enough space", async () => {
+    window.innerHeight = 800;
+
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+      top: 100,
+      bottom: 120,
+      height: 20,
+      width: 200,
+      left: 0,
+      right: 200,
+      x: 0,
+      y: 100,
+      toJSON: () => {},
+    }));
+
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get() {
+        return 100;
+      },
+    });
+
+    const { container } = render(
+      <Select options={items} onChange={() => {}} />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    const dropdown = await within(container).findByRole("listbox");
+
+    expect(dropdown.className).toMatch(/dropdown-up|top-/);
+  });
+
+  it("should associate label with the select and focus select on label click", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} label="test" />
+    );
+
+    const label = within(container).getByText("test");
+    const select = within(container).getByRole("combobox");
+
+    expect(label).toHaveAttribute("for", select.id);
+
+    await user.click(label);
+
+    expect(select).toHaveFocus();
   });
 });

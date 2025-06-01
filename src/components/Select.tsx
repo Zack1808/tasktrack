@@ -23,8 +23,7 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [highlightedIndex, setHighligthedIndex] = useState<number>(0);
-  const [optionsListPosition, setOptionsListPosition] =
-    useState<string>("top-full mt-1");
+  const [optionsListPosition, setOptionsListPosition] = useState<string>("");
 
   const componentID = id ?? useId();
 
