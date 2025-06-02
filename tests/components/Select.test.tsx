@@ -3,6 +3,7 @@ import Select from "../../src/components/Select";
 import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
+import React from "react";
 
 describe("Select component", () => {
   const items = Array.from({ length: 50 }, (_, i) => ({
@@ -13,6 +14,8 @@ describe("Select component", () => {
   beforeAll(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
+
+  document.body.style.overflow = "auto";
 
   const user = userEvent.setup();
 
@@ -397,5 +400,111 @@ describe("Select component", () => {
     await user.click(label);
 
     expect(select).toHaveFocus();
+  });
+
+  it("should reset the dropdown scroll position", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} label="test" />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    let dropdown = within(container).getByRole("listbox");
+
+    dropdown.scrollTop = 100;
+    expect(dropdown.scrollTop).toBe(100);
+
+    await user.click(select);
+    await user.click(select);
+
+    dropdown = within(container).getByRole("listbox");
+    expect(dropdown.scrollTop).toBe(0);
+  });
+
+  it("should reset the highlighted index when the list reopens", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} label="test" />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    await user.click(select);
+
+    let options = within(container).getAllByRole("option");
+
+    expect(options[0]).toHaveAttribute("data-highlighted", "true");
+    expect(options[3]).toHaveAttribute("data-highlighted", "false");
+
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{ArrowDown}");
+
+    expect(options[0]).toHaveAttribute("data-highlighted", "false");
+    expect(options[3]).toHaveAttribute("data-highlighted", "true");
+
+    await user.click(select);
+    await user.click(select);
+
+    options = within(container).getAllByRole("option");
+
+    expect(options[0]).toHaveAttribute("data-highlighted", "true");
+    expect(options[3]).toHaveAttribute("data-highlighted", "false");
+  });
+
+  it("should stop the page from scrolling when the select is used with keyboard and allows scroll when select is closed", async () => {
+    const { container } = render(
+      <Select options={items} onChange={() => {}} label="test" />
+    );
+
+    const select = within(container).getByRole("combobox");
+
+    select.focus();
+    expect(select).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    const dropdown = within(container).getByRole("listbox");
+    expect(dropdown).toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await user.keyboard("{Enter}");
+
+    expect(document.body.style.overflow).toBe("auto");
+  });
+
+  it("should only rerender when the props change", () => {
+    const renderSpy = vi.fn();
+    const MemoizedSelect = React.memo((props: any) => {
+      renderSpy();
+      return <Select {...props} />;
+    });
+    const handleChange = () => {};
+
+    const { rerender } = render(
+      <MemoizedSelect
+        options={items}
+        value={items[0]}
+        onChange={handleChange}
+      />
+    );
+
+    rerender(
+      <MemoizedSelect
+        options={items}
+        value={items[0]}
+        onChange={handleChange}
+      />
+    );
+
+    rerender(
+      <MemoizedSelect
+        options={items}
+        value={items[1]}
+        onChange={handleChange}
+      />
+    );
+
+    expect(renderSpy).toHaveBeenCalledTimes(2);
   });
 });
