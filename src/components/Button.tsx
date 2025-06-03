@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 
 import Loader from "./Loader";
 
+export type ButtonVariant = "outlined" | "contained" | "text";
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant: "outlined" | "contained" | "text";
+  variant: ButtonVariant;
   link?: string;
   className?: string;
   disabled?: boolean;

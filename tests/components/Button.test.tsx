@@ -1,131 +1,135 @@
-import { it, expect, describe, vi } from "vitest";
+import { it, expect, describe, vi, afterEach } from "vitest";
 import { render, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
-import Button from "../../src/components/Button";
+import Button, { ButtonVariant } from "../../src/components/Button";
 import "@testing-library/jest-dom/vitest";
 
 describe("Button component", () => {
   const buttonText = "Click me!";
   const user = userEvent.setup();
+  const handleClick = vi.fn();
 
-  const setup = (variant: string, props: any = {}) => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const renderButton = (
+    variant: ButtonVariant,
+    props: Partial<React.ComponentProps<typeof Button>> = {}
+  ) => {
     const { container } = render(
-      <Button variant={variant as "contained" | "outlined" | "text"} {...props}>
-        {buttonText}
-      </Button>
+      <MemoryRouter>
+        <Button variant={variant} {...props}>
+          {buttonText}
+        </Button>
+      </MemoryRouter>
     );
-    return container;
+
+    return {
+      button: within(container).queryByRole("button"),
+      link: within(container).queryByRole("link"),
+    };
   };
 
-  describe.each([
-    ["contained", "contained"],
-    ["outlined", "outlined"],
-    ["text", "text"],
-  ])("variant: %s", (variant) => {
-    it(`should render with data-variant="${variant}"`, () => {
-      const container = setup(variant);
-      const button = within(container).getByRole("button");
-      expect(button).toHaveAttribute("data-variant", variant);
+  describe("Rendering", () => {
+    it.each(["contained", "outlined", "text"] as const)(
+      "should render '%s' variant correctly",
+      (variant) => {
+        const { button } = renderButton(variant);
+
+        expect(button).toHaveAttribute("data-variant", variant);
+      }
+    );
+
+    it("should apply custom className", () => {
+      const { button } = renderButton("contained", {
+        className: "custom-class",
+      });
+
+      expect(button).toHaveClass("custom-class");
     });
   });
 
-  describe("link behavior", () => {
-    it("should render React Router <Link> when 'link' prop is provided without target", () => {
-      const { container } = render(
-        <MemoryRouter>
-          <Button variant="text" link="/home">
-            {buttonText}
-          </Button>
-        </MemoryRouter>
-      );
-      const link = within(container).getByRole("link");
+  describe("Link behaviour", () => {
+    it("should render React Router Link when link prop is provided", () => {
+      const { link } = renderButton("text", { link: "/home" });
+
+      expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute("href", "/home");
       expect(link).not.toHaveAttribute("target");
     });
 
-    it("should render <a> with target when 'link' and 'target' props are provided", () => {
-      const container = setup("text", {
+    it("should render anchor tag when link prop and target prop are provided", () => {
+      const { link } = renderButton("text", {
         link: "https://example.com",
         target: "_blank",
       });
-      const anchor = within(container).getByRole("link");
-      expect(anchor).toHaveAttribute("href", "https://example.com");
-      expect(anchor).toHaveAttribute("target", "_blank");
-      expect(anchor).toHaveAttribute("rel", "noreferrer");
+
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute("href", "https://example.com");
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noreferrer");
     });
   });
 
-  describe("disabled and loading states", () => {
+  describe("States", () => {
     it.each([
       ["disabled", { disabled: true }],
       ["loading", { loading: true }],
-    ])(
-      "should render button that is disabled when %s prop is true",
-      (_, props) => {
-        const container = setup("contained", { ...props });
-        const button = within(container).getByRole("button");
-        expect(button).toBeDisabled();
-      }
-    );
+    ])("should be disabled when %s", (_, props) => {
+      const { button } = renderButton("contained", props);
 
-    it("should show loader when loading", () => {
-      const container = setup("contained", { loading: true });
-      const button = within(container).getByRole("button");
-      const loader = within(button).queryByTestId("loader");
+      expect(button).toBeDisabled();
+    });
+
+    it("should show the loader when loading", () => {
+      const { button } = renderButton("contained", { loading: true });
+
+      const loader = within(button as HTMLElement).getByTestId("loader");
       expect(loader).toBeInTheDocument();
     });
 
     it("should not show loader when not loading", () => {
-      const container = setup("contained");
-      const button = within(container).getByRole("button");
-      const loader = within(button).queryByTestId("loader");
+      const { button } = renderButton("contained");
+
+      const loader = within(button as HTMLElement).queryByTestId("loader");
       expect(loader).not.toBeInTheDocument();
-      expect(button).not.toBeDisabled();
     });
   });
 
-  it("should apply custom className", () => {
-    const container = setup("contained", {
-      className: "custom-class",
-    });
-    const button = within(container).getByRole("button");
-    expect(button.className).toContain("custom-class");
-  });
+  describe("Interactions", () => {
+    it("should call onClick when clicked", async () => {
+      const { button } = renderButton("contained", { onClick: handleClick });
 
-  describe("click behavior", () => {
-    it("should call onClick handler when clicked", async () => {
-      const handleClick = vi.fn();
-      const container = setup("contained", { onClick: handleClick });
-      const button = within(container).getByRole("button");
-      await user.click(button);
+      await user.click(button as HTMLElement);
+
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it("should not call onClick when loading", async () => {
-      const handleClick = vi.fn();
-      const container = setup("contained", {
-        loading: true,
+    it.each([
+      ["disabled", { disabled: true }],
+      ["loading", { loading: true }],
+    ])("should not call onClick when %s", async (_, props) => {
+      const { button } = renderButton("contained", {
         onClick: handleClick,
+        ...props,
       });
-      const button = within(container).getByRole("button");
-      await user.click(button);
+
+      await user.click(button as HTMLElement);
+
       expect(handleClick).not.toHaveBeenCalled();
     });
-  });
 
-  it("should be keyboard accessible and triggers onClick with Enter and Space", async () => {
-    const handleClick = vi.fn();
+    it("should be keyboard accessible", async () => {
+      const { button } = renderButton("contained", { onClick: handleClick });
 
-    const container = setup("contained", { onClick: handleClick });
-    const button = within(container).getByRole("button");
+      (button as HTMLElement).focus();
 
-    button.focus();
-    expect(button).toHaveFocus();
+      await user.keyboard("{Enter}");
+      await user.keyboard("{ }");
 
-    await user.keyboard("{Enter}");
-    await user.keyboard("{ }");
-
-    expect(handleClick).toHaveBeenCalledTimes(2);
+      expect(handleClick).toHaveBeenCalledTimes(2);
+    });
   });
 });
