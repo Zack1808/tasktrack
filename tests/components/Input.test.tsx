@@ -7,45 +7,52 @@ import "@testing-library/jest-dom/vitest";
 describe("Input component", () => {
   const user = userEvent.setup();
 
+  const setup = (props: any = {}) => {
+    const { container } = render(<Input {...props} />);
+    return container;
+  };
+
   it("should render without crashing", () => {
-    const { container } = render(<Input />);
+    const container = setup();
 
     const input = within(container).getByRole("textbox");
     expect(input).toBeInTheDocument();
   });
 
   it("should render with label without crashing", () => {
-    const { container } = render(<Input id="email" label="Email" />);
+    const container = setup({ id: "email", label: "Email" });
 
     const input = within(container).getByLabelText("Email");
     expect(input).toBeInTheDocument();
   });
 
   it("should render an asterisk on the label when the input is required and label is provided", () => {
-    const { container } = render(<Input label="Email" required />);
+    const container = setup({ label: "Email", required: true });
 
     const input = within(container).getByLabelText(/Email \*/);
     expect(input).toBeInTheDocument();
   });
 
   it("should render a toggle password visibility button when type is password", () => {
-    const { container } = render(
-      <Input type="password" label="Password" aria-label="password-input" />
-    );
+    const container = setup({
+      type: "password",
+      label: "Password",
+      "aria-label": "password-input",
+    });
 
     const button = within(container).getByRole("button");
     expect(button).toBeInTheDocument();
   });
 
   it("should not render the toggle password visibility button for non-password inputs", () => {
-    const { container } = render(<Input type="text" />);
+    const container = setup({ type: "text" });
 
     const button = within(container).queryByRole("button");
     expect(button).not.toBeInTheDocument();
   });
 
   it("should toggle the password visibility if the toggle password visibility button is pressed", async () => {
-    const { container } = render(<Input type="password" label="Password" />);
+    const container = setup({ type: "password", label: "Password" });
 
     const input = within(container).getByLabelText(
       "Password"
@@ -66,23 +73,24 @@ describe("Input component", () => {
     expect(toggleButton).toHaveAccessibleName("Show password");
   });
 
-  it("should set autoComplete to 'new-password' for password inputs", () => {
-    const { container } = render(<Input type="password" label="Password" />);
+  const autoCompleteCases = [
+    { type: "password", expected: "new-password", label: "Password" },
+    { type: "email", expected: "on", label: "Text" },
+  ];
 
-    const input = within(container).getByLabelText("Password");
-    expect(input).toHaveAttribute("autoComplete", "new-password");
-  });
+  autoCompleteCases.forEach(({ type, expected, label }) => {
+    it(`should set autoComplete to ${expected} for type of ${type}`, () => {
+      const container = setup({ type, label });
 
-  it("should set autoComplete to 'on' for non-password inputs", () => {
-    const { container } = render(<Input type="email" />);
-
-    const input = within(container).getByRole("textbox");
-    expect(input).toHaveAttribute("autoComplete", "on");
+      const input = within(container).getByLabelText(label);
+      expect(input).toHaveAttribute("autoComplete", expected);
+    });
   });
 
   it("should get the additional props get passed down", () => {
-    const { container } = render(<Input type="text" placeholder="UserName" />);
+    const container = setup({ type: "text", placeholder: "UserName" });
 
     const input = within(container).getByPlaceholderText("UserName");
+    expect(input).toBeInTheDocument();
   });
 });
