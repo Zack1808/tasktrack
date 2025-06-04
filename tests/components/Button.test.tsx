@@ -27,8 +27,8 @@ describe("Button component", () => {
     );
 
     return {
-      button: within(container).queryByRole("button"),
-      link: within(container).queryByRole("link"),
+      getButton: () => within(container).queryByRole("button"),
+      getLink: () => within(container).queryByRole("link"),
     };
   };
 
@@ -36,16 +36,20 @@ describe("Button component", () => {
     it.each(["contained", "outlined", "text"] as const)(
       "should render '%s' variant correctly",
       (variant) => {
-        const { button } = renderButton(variant);
+        const { getButton } = renderButton(variant);
+
+        const button = getButton();
 
         expect(button).toHaveAttribute("data-variant", variant);
       }
     );
 
     it("should apply custom className", () => {
-      const { button } = renderButton("contained", {
+      const { getButton } = renderButton("contained", {
         className: "custom-class",
       });
+
+      const button = getButton();
 
       expect(button).toHaveClass("custom-class");
     });
@@ -53,7 +57,9 @@ describe("Button component", () => {
 
   describe("Link behaviour", () => {
     it("should render React Router Link when link prop is provided", () => {
-      const { link } = renderButton("text", { link: "/home" });
+      const { getLink } = renderButton("text", { link: "/home" });
+
+      const link = getLink();
 
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute("href", "/home");
@@ -61,10 +67,12 @@ describe("Button component", () => {
     });
 
     it("should render anchor tag when link prop and target prop are provided", () => {
-      const { link } = renderButton("text", {
+      const { getLink } = renderButton("text", {
         link: "https://example.com",
         target: "_blank",
       });
+
+      const link = getLink();
 
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute("href", "https://example.com");
@@ -78,20 +86,26 @@ describe("Button component", () => {
       ["disabled", { disabled: true }],
       ["loading", { loading: true }],
     ])("should be disabled when %s", (_, props) => {
-      const { button } = renderButton("contained", props);
+      const { getButton } = renderButton("contained", props);
+
+      const button = getButton();
 
       expect(button).toBeDisabled();
     });
 
     it("should show the loader when loading", () => {
-      const { button } = renderButton("contained", { loading: true });
+      const { getButton } = renderButton("contained", { loading: true });
+
+      const button = getButton();
 
       const loader = within(button as HTMLElement).getByTestId("loader");
       expect(loader).toBeInTheDocument();
     });
 
     it("should not show loader when not loading", () => {
-      const { button } = renderButton("contained");
+      const { getButton } = renderButton("contained");
+
+      const button = getButton();
 
       const loader = within(button as HTMLElement).queryByTestId("loader");
       expect(loader).not.toBeInTheDocument();
@@ -100,7 +114,9 @@ describe("Button component", () => {
 
   describe("Interactions", () => {
     it("should call onClick when clicked", async () => {
-      const { button } = renderButton("contained", { onClick: handleClick });
+      const { getButton } = renderButton("contained", { onClick: handleClick });
+
+      const button = getButton();
 
       await user.click(button as HTMLElement);
 
@@ -111,10 +127,12 @@ describe("Button component", () => {
       ["disabled", { disabled: true }],
       ["loading", { loading: true }],
     ])("should not call onClick when %s", async (_, props) => {
-      const { button } = renderButton("contained", {
+      const { getButton } = renderButton("contained", {
         onClick: handleClick,
         ...props,
       });
+
+      const button = getButton();
 
       await user.click(button as HTMLElement);
 
@@ -122,7 +140,9 @@ describe("Button component", () => {
     });
 
     it("should be keyboard accessible", async () => {
-      const { button } = renderButton("contained", { onClick: handleClick });
+      const { getButton } = renderButton("contained", { onClick: handleClick });
+
+      const button = getButton();
 
       (button as HTMLElement).focus();
 
