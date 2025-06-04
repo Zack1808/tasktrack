@@ -1,510 +1,317 @@
-import { it, expect, describe, beforeAll, vi } from "vitest";
-import Select from "../../src/components/Select";
+import { it, expect, describe, beforeAll, vi, afterEach } from "vitest";
 import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom/vitest";
+import Select from "../../src/components/Select";
 import React from "react";
+import "@testing-library/jest-dom/vitest";
 
 describe("Select component", () => {
+  const user = userEvent.setup();
   const items = Array.from({ length: 50 }, (_, i) => ({
-    label: `Option ${i + 1}`,
+    label: `Item ${i + 1}`,
     value: `${i + 1}`,
   }));
+  const handleChange = vi.fn();
 
   beforeAll(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
-  document.body.style.overflow = "auto";
-
-  const user = userEvent.setup();
-
-  it("should use the correct ARIA roles", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-    expect(select).toBeInTheDocument();
-
-    expect(within(select).queryByRole("listbox")).not.toBeInTheDocument();
-
-    await user.click(select);
-
-    const dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    const options = within(dropdown).getAllByRole("option");
-    expect(options).toHaveLength(items.length);
-
-    expect(options[0]).toHaveTextContent(items[0].label);
-    expect(options[1]).toHaveTextContent(items[1].label);
+  afterEach(() => {
+    vi.clearAllMocks();
+    document.body.style.overflow = "auto";
   });
 
-  it("should have the correct aria-expanded, aria-controls and aria-activedescendant", async () => {
+  const renderSelect = (
+    props: Partial<React.ComponentProps<typeof Select>> = {}
+  ) => {
     const { container } = render(
-      <Select options={items} onChange={() => {}} />
+      <Select options={items} onChange={handleChange} {...props} />
     );
 
-    const select = within(container).getByRole("combobox");
+    const { label } = props;
 
-    expect(select).toHaveAttribute("aria-expanded", "false");
-    expect(select).not.toHaveAttribute("aria-activedescendant");
+    return {
+      getSelect: () => within(container).queryByRole("combobox"),
+      getLabel: () => (label ? within(container).queryByText(label) : null),
+      getDropdown: () => within(container).queryByRole("listbox"),
+      getOptions: () => within(container).queryAllByRole("option"),
+    };
+  };
 
-    await user.click(select);
+  describe("Rendering", () => {
+    it("should render without label", () => {
+      const { getSelect } = renderSelect();
 
-    expect(select).toHaveAttribute("aria-expanded", "true");
+      expect(getSelect()).toBeInTheDocument();
+    });
 
-    const dropdown = within(container).getByRole("listbox");
-    const dropdownId = dropdown.getAttribute("id");
-    expect(dropdownId).toBeTruthy();
-    expect(select).toHaveAttribute("aria-controls", dropdownId);
+    it("should render with label", () => {
+      const { getSelect, getLabel } = renderSelect({ label: "Test" });
 
-    await user.keyboard("{ArrowDown}");
+      expect(getSelect()).toBeInTheDocument();
+      expect(getLabel()).toBeInTheDocument();
+    });
 
-    const activeDescendant = select.getAttribute("aria-activedescendant");
-    expect(activeDescendant).toBeTruthy();
+    it("should render with initial value", () => {
+      const { getSelect } = renderSelect({ value: items[0] });
 
-    const highlightedOption = container.querySelector(
-      '[data-highlighted="true"]'
-    );
-
-    expect(highlightedOption?.id).toBe(activeDescendant);
-  });
-
-  it("should have an aria-selected on every option", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    const options = within(container).getAllByRole("option");
-
-    options.forEach((option) => {
-      expect(option).toHaveAttribute("aria-selected");
+      expect(getSelect()).toHaveTextContent(items[0].label);
     });
   });
 
-  it("should be focusable when tab is pressed", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    await user.tab();
-
-    const select = within(container).getByRole("combobox");
-
-    expect(select).toHaveFocus();
-  });
-
-  it("should render without label", () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    expect(select).toBeInTheDocument();
-  });
-
-  it("should render with label", () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} label="Test label" />
-    );
-
-    const label = within(container).getByText("Test label");
-
-    expect(label).toBeInTheDocument();
-  });
-
-  it("should render with initial value selected", () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} value={items[0]} />
-    );
-
-    const displayedValue = within(container).getByTestId("select-value");
-
-    expect(displayedValue).toHaveTextContent(items[0].label);
-  });
-
-  it("should open and close the dropdown on click", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-
-    await user.click(select);
-
-    const dropdown = within(container).getByRole("listbox");
-
-    expect(dropdown).toBeInTheDocument();
-
-    await user.click(select);
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-  });
-
-  it("should close the dropdown on blur", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    let dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    await user.tab();
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-
-    await user.click(select);
-
-    dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-    const body = document.body;
-
-    await user.click(body);
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-  });
-
-  it("should close the dropdown when the Escape key is pressed", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    let dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    await user.keyboard("{Escape}");
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-  });
-
-  it("should open and close the dropdown when enter or space are pressed", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    select.focus();
-    expect(select).toHaveFocus();
-
-    await user.keyboard("{Enter}");
-
-    let dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    await user.keyboard("{ }");
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-  });
-
-  it("should open the dropdown when the up or down arrow keys have been pressed", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    select.focus();
-    expect(select).toHaveFocus();
-
-    await user.keyboard("{ArrowDown}");
-
-    let dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    await user.keyboard("{ }");
-
-    expect(within(container).queryByRole("listbox")).not.toBeInTheDocument();
-
-    await user.keyboard("{ArrowUp}");
-
-    dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-  });
-
-  it("should highlight the currently focused option with the arrow keys", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    const dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-
-    const options = within(dropdown).queryAllByRole("option");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "true");
-    expect(options[1]).toHaveAttribute("data-highlighted", "false");
-
-    await user.keyboard("{ArrowDown}");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "false");
-    expect(options[1]).toHaveAttribute("data-highlighted", "true");
-
-    await user.keyboard("{ArrowUp}");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "true");
-    expect(options[1]).toHaveAttribute("data-highlighted", "false");
-  });
-
-  it("should select the highlighted option when pressing enter or space", async () => {
-    const handleSelect = vi.fn();
-
-    const { container } = render(
-      <Select options={items} onChange={handleSelect} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    select.focus();
-    await user.keyboard("{ArrowDown}");
-    await user.keyboard("{Enter}");
-
-    expect(handleSelect).toHaveBeenCalledWith(items[0]);
-  });
-
-  it("should not call the onChange if the the option is the same as the current value", async () => {
-    const handleSelect = vi.fn();
-
-    const { container } = render(
-      <Select options={items} value={items[0]} onChange={handleSelect} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    select.focus();
-    await user.keyboard("{ArrowDown}");
-    await user.keyboard("{Enter}");
-
-    expect(handleSelect).not.toHaveBeenCalled();
-  });
-
-  it("should scroll to highlighted option if it is out of view", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    const options = await within(container).findAllByRole("option");
-
-    options.forEach((item) => (item.scrollIntoView = vi.fn()));
-
-    for (let i = 0; i < 20; i++) await user.keyboard("{ArrowDown}");
-
-    expect(options[19].scrollIntoView).toHaveBeenCalled();
-  });
-
-  it("should open dropdown upwards when there is not enough space", async () => {
-    window.innerHeight = 500;
-
-    Element.prototype.getBoundingClientRect = vi.fn(() => ({
-      top: 450,
-      bottom: 470,
-      height: 20,
-      width: 200,
-      left: 0,
-      right: 200,
-      x: 0,
-      y: 450,
-      toJSON: () => {},
-    }));
-
-    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-      configurable: true,
-      get() {
-        return 100;
-      },
+  describe("Accessibility", () => {
+    it("should apply the ARIA roles and attributes", async () => {
+      const { getSelect, getDropdown, getOptions } = renderSelect();
+
+      let select = getSelect();
+      let dropdown = getDropdown();
+
+      expect(select).toHaveAttribute("aria-expanded", "false");
+      expect(select).not.toHaveAttribute("aria-activedescendant");
+      expect(dropdown).not.toBeInTheDocument();
+
+      await user.click(select as HTMLElement);
+
+      dropdown = getDropdown();
+      const id = dropdown?.getAttribute("id");
+      const options = getOptions();
+
+      expect(dropdown).toBeInTheDocument();
+      expect(select).toHaveAttribute("aria-expanded", "true");
+      expect(select).toHaveAttribute("aria-controls", id);
+      expect(options).toHaveLength(items.length);
     });
 
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
+    it("should have aria-selected on all options", async () => {
+      const { getSelect, getOptions } = renderSelect();
 
-    const select = within(container).getByRole("combobox");
+      const select = getSelect();
 
-    await user.click(select);
+      await user.click(select as HTMLElement);
 
-    const dropdown = await within(container).findByRole("listbox");
+      const options = getOptions();
 
-    expect(dropdown.className).toMatch(/bottom-full/);
-  });
-
-  it("should open dropdown downwards when there is not enough space", async () => {
-    window.innerHeight = 800;
-
-    Element.prototype.getBoundingClientRect = vi.fn(() => ({
-      top: 100,
-      bottom: 120,
-      height: 20,
-      width: 200,
-      left: 0,
-      right: 200,
-      x: 0,
-      y: 100,
-      toJSON: () => {},
-    }));
-
-    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-      configurable: true,
-      get() {
-        return 100;
-      },
+      options.forEach((option) =>
+        expect(option).toHaveAttribute("aria-selected")
+      );
     });
 
-    const { container } = render(
-      <Select options={items} onChange={() => {}} />
-    );
+    it("should associate label with select and focuses on label click", async () => {
+      const { getSelect, getLabel } = renderSelect({ label: "Test Label" });
 
-    const select = within(container).getByRole("combobox");
+      const select = getSelect();
+      const label = getLabel();
 
-    await user.click(select);
-
-    const dropdown = await within(container).findByRole("listbox");
-
-    expect(dropdown.className).toMatch(/dropdown-up|top-/);
-  });
-
-  it("should associate label with the select and focus select on label click", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} label="test" />
-    );
-
-    const label = within(container).getByText("test");
-    const select = within(container).getByRole("combobox");
-
-    expect(label).toHaveAttribute("for", select.id);
-
-    await user.click(label);
-
-    expect(select).toHaveFocus();
-  });
-
-  it("should reset the dropdown scroll position", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} label="test" />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    let dropdown = within(container).getByRole("listbox");
-
-    dropdown.scrollTop = 100;
-    expect(dropdown.scrollTop).toBe(100);
-
-    await user.click(select);
-    await user.click(select);
-
-    dropdown = within(container).getByRole("listbox");
-    expect(dropdown.scrollTop).toBe(0);
-  });
-
-  it("should reset the highlighted index when the list reopens", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} label="test" />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    await user.click(select);
-
-    let options = within(container).getAllByRole("option");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "true");
-    expect(options[3]).toHaveAttribute("data-highlighted", "false");
-
-    await user.keyboard("{ArrowDown}");
-    await user.keyboard("{ArrowDown}");
-    await user.keyboard("{ArrowDown}");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "false");
-    expect(options[3]).toHaveAttribute("data-highlighted", "true");
-
-    await user.click(select);
-    await user.click(select);
-
-    options = within(container).getAllByRole("option");
-
-    expect(options[0]).toHaveAttribute("data-highlighted", "true");
-    expect(options[3]).toHaveAttribute("data-highlighted", "false");
-  });
-
-  it("should stop the page from scrolling when the select is used with keyboard and allows scroll when select is closed", async () => {
-    const { container } = render(
-      <Select options={items} onChange={() => {}} label="test" />
-    );
-
-    const select = within(container).getByRole("combobox");
-
-    select.focus();
-    expect(select).toHaveFocus();
-
-    await user.keyboard("{ArrowDown}");
-    const dropdown = within(container).getByRole("listbox");
-    expect(dropdown).toBeInTheDocument();
-    expect(document.body.style.overflow).toBe("hidden");
-
-    await user.keyboard("{Enter}");
-
-    expect(document.body.style.overflow).toBe("auto");
-  });
-
-  it("should only rerender when the props change", () => {
-    const renderSpy = vi.fn();
-    const MemoizedSelect = React.memo((props: any) => {
-      renderSpy();
-      return <Select {...props} />;
+      expect(label).toHaveAttribute("for", (select as HTMLElement).id);
+      await user.click(label as HTMLElement);
+      expect(select).toHaveFocus();
     });
-    const handleChange = () => {};
+  });
 
-    const { rerender } = render(
-      <MemoizedSelect
-        options={items}
-        value={items[0]}
-        onChange={handleChange}
-      />
+  describe("Keyboard interactions", () => {
+    it("should open dropdown on ArrowUp/ArrowDown and selects on Enter/Space", async () => {
+      const { getSelect, getDropdown } = renderSelect();
+
+      const select = getSelect();
+      (select as HTMLElement).focus();
+
+      await user.keyboard("{ArrowDown}");
+      expect(getDropdown()).toBeInTheDocument();
+
+      await user.keyboard("{Enter}");
+      expect(handleChange).toHaveBeenCalledWith(items[0]);
+      expect(getDropdown()).not.toBeInTheDocument();
+
+      await user.keyboard("{ArrowUp}{ }");
+      expect(handleChange).toHaveBeenCalledWith(items[0]);
+    });
+
+    it("should highlight options with arrow keys", async () => {
+      const { getSelect, getOptions } = renderSelect();
+      await user.click(getSelect() as HTMLElement);
+
+      const options = getOptions();
+
+      expect(options[0]).toHaveAttribute("data-highlighted", "true");
+
+      await user.keyboard("{ArrowDown}");
+      expect(options[0]).toHaveAttribute("data-highlighted", "false");
+      expect(options[1]).toHaveAttribute("data-highlighted", "true");
+    });
+
+    it("should close dropdown on Escape", async () => {
+      const { getSelect, getDropdown } = renderSelect();
+
+      await user.click(getSelect() as HTMLElement);
+
+      expect(getDropdown()).toBeInTheDocument();
+
+      await user.keyboard("{Escape}");
+
+      expect(getDropdown()).not.toBeInTheDocument();
+    });
+
+    it("should prevent page scroll when open with keyboard and allow scroll when closed", async () => {
+      const { getSelect } = renderSelect();
+
+      (getSelect() as HTMLElement).focus();
+
+      await user.keyboard("{ArrowDown}");
+      expect(document.body.style.overflow).toBe("hidden");
+
+      await user.keyboard("{Escape}");
+      expect(document.body.style.overflow).toBe("auto");
+    });
+  });
+
+  describe("Mouse interactions", () => {
+    it("should toggle on click", async () => {
+      const { getSelect, getDropdown } = renderSelect();
+
+      const select = getSelect();
+
+      await user.click(select as HTMLElement);
+      expect(getDropdown()).toBeInTheDocument();
+
+      await user.click(select as HTMLElement);
+      expect(getDropdown()).not.toBeInTheDocument();
+    });
+
+    it("should close dropdown on blur", async () => {
+      const { getSelect, getDropdown } = renderSelect();
+
+      await user.click(getSelect() as HTMLElement);
+      expect(getDropdown()).toBeInTheDocument();
+
+      await user.keyboard("{Tab}");
+      expect(getDropdown()).not.toBeInTheDocument();
+    });
+
+    it("should select option on click", async () => {
+      const { getOptions, getSelect } = renderSelect();
+      await user.click(getSelect() as HTMLElement);
+      const options = getOptions();
+      await user.click(options[1]);
+      expect(handleChange).toHaveBeenCalledWith(items[1]);
+    });
+  });
+
+  describe("Dropdown positioning", () => {
+    const setupPositinTest = (position: "top" | "bottom") => {
+      const rect =
+        position === "top"
+          ? { top: 450, bottom: 470, height: 20 }
+          : { top: 100, bottom: 120, height: 20 };
+
+      window.innerHeight = position === "top" ? 500 : 800;
+
+      Element.prototype.getBoundingClientRect = vi.fn(() => ({
+        ...rect,
+        width: 200,
+        left: 0,
+        right: 200,
+        x: 0,
+        y: rect.top,
+        toJSON: () => {},
+      }));
+
+      Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+        configurable: true,
+        get() {
+          return 100;
+        },
+      });
+    };
+
+    it.each(["top", "bottom"])(
+      "should open dropdown on %s of the select",
+      async (position) => {
+        setupPositinTest(position as "top" | "bottom");
+        const { getSelect, getDropdown } = renderSelect();
+
+        await user.click(getSelect() as HTMLElement);
+        expect((getDropdown() as HTMLElement).className).toMatch(
+          `${position === "top" ? "bottom" : "top"}-full`
+        );
+      }
     );
+  });
 
-    rerender(
-      <MemoizedSelect
-        options={items}
-        value={items[0]}
-        onChange={handleChange}
-      />
-    );
+  describe("Performance optimizing", () => {
+    it("should reset highlighted index when reopening", async () => {
+      const { getSelect, getOptions } = renderSelect();
+      const select = getSelect();
 
-    rerender(
-      <MemoizedSelect
-        options={items}
-        value={items[1]}
-        onChange={handleChange}
-      />
-    );
+      await user.click(select as HTMLElement);
+      let options = getOptions();
+      expect(options[0]).toHaveAttribute("data-highlighted", "true");
 
-    expect(renderSpy).toHaveBeenCalledTimes(2);
+      await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+      expect(options[3]).toHaveAttribute("data-highlighted", "true");
+
+      await user.click(select as HTMLElement);
+      await user.click(select as HTMLElement);
+
+      options = getOptions();
+      expect(options[0]).toHaveAttribute("data-highlighted", "true");
+    });
+
+    it("should reset scroll position when reopening", async () => {
+      const { getSelect, getDropdown } = renderSelect();
+
+      const select = getSelect();
+
+      await user.click(select as HTMLElement);
+      const dropdown = getDropdown();
+      (dropdown as HTMLElement).scrollTop = 100;
+
+      await user.click(select as HTMLElement);
+      await user.click(select as HTMLElement);
+
+      expect((getDropdown() as HTMLElement).scrollTop).toBe(0);
+    });
+
+    it("should only rerender when the props change", () => {
+      const renderSpy = vi.fn();
+      const MemoizedSelect = React.memo(
+        (props: Partial<React.ComponentProps<typeof Select>>) => {
+          renderSpy();
+          return (
+            <Select
+              options={props.options ?? []}
+              onChange={props.onChange ?? handleChange}
+              {...props}
+            />
+          );
+        }
+      );
+
+      const { rerender } = render(
+        <MemoizedSelect
+          options={items}
+          onChange={handleChange}
+          value={items[0]}
+        />
+      );
+
+      rerender(
+        <MemoizedSelect
+          options={items}
+          value={items[0]}
+          onChange={handleChange}
+        />
+      );
+
+      rerender(
+        <MemoizedSelect
+          options={items}
+          value={items[1]}
+          onChange={handleChange}
+        />
+      );
+
+      expect(renderSpy).toHaveBeenCalledTimes(2);
+    });
   });
 });

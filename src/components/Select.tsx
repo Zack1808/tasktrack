@@ -103,6 +103,7 @@ const Select: React.FC<SelectProps> = ({
 
         case "Escape":
           closeDropdown();
+          document.body.style.overflow = "auto";
           break;
       }
     };
