@@ -95,7 +95,7 @@ const Modal: React.FC<ModalProps> = ({
           <h2 id="modal-title" className="font-semibold text-2xl">
             {title}
           </h2>
-          <Button variant="text" onClick={closeModal}>
+          <Button variant="text" aria-label="Close Modal" onClick={closeModal}>
             <X />
           </Button>
         </div>
