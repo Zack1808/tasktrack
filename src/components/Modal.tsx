@@ -29,9 +29,11 @@ const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (isOpen) lastFocusedRef.current?.focus();
         closeModal();
-        lastFocusedRef.current = null;
+        if (!isOpen && lastFocusedRef.current) {
+          lastFocusedRef.current?.focus();
+          lastFocusedRef.current = null;
+        }
       }
 
       if (!modalRef.current) return;
@@ -87,10 +89,7 @@ const Modal: React.FC<ModalProps> = ({
       } ${isOpen ? "visible" : "invisible"}`}
       onClick={handleBackgroundClick}
     >
-      <div
-        tabIndex={-1}
-        className="bg-white p-4 rounded-md w-full max-w-4xl flex flex-col gap-6"
-      >
+      <div className="bg-white p-4 rounded-md w-full max-w-4xl flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h2 id="modal-title" className="font-semibold text-2xl">
             {title}

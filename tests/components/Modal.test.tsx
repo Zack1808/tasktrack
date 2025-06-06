@@ -1,7 +1,7 @@
 import { it, expect, describe, beforeEach, afterEach, vi } from "vitest";
 import { render, within, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import React, { useState } from "react";
+import React from "react";
 import Modal from "../../src/components/Modal";
 import "@testing-library/jest-dom/vitest";
 
@@ -9,7 +9,12 @@ vi.mock("react-dom", async () => {
   const actual = await vi.importActual<typeof import("react-dom")>("react-dom");
   return {
     ...actual,
-    createPortal: (children: React.ReactNode) => children,
+    createPortal: (children: React.ReactNode) => {
+      const container = document.createElement("div");
+      container.tabIndex = -1;
+      document.body.tabIndex = -1;
+      return children;
+    },
   };
 });
 
@@ -29,8 +34,13 @@ describe("Modal component", () => {
   beforeEach(() => {
     modalRoot = document.createElement("div");
     modalRoot.setAttribute("id", "modal");
-    modalRoot.setAttribute("tabindex", "-1");
+    modalRoot.setAttribute("data-testid", "portal-root");
+    modalRoot.tabIndex = -1;
     document.body.appendChild(modalRoot);
+
+    vi.spyOn(React, "useRef").mockImplementation((initialValue) => ({
+      current: initialValue,
+    }));
   });
 
   afterEach(() => {
@@ -156,24 +166,35 @@ describe("Modal component", () => {
       expect(getCloseButton()).toHaveFocus();
     });
 
-    // it("should focus to the previously focust element when modal is closed", async () => {
-    //   const triggerButton = document.createElement("button");
-    //   triggerButton.textContent = "Trigger";
-    //   document.body.appendChild(triggerButton);
+    it("should focus to the previously focust element when modal is closed", async () => {
+      const triggerButton = document.createElement("button");
+      triggerButton.textContent = "Trigger";
+      document.body.appendChild(triggerButton);
 
-    //   triggerButton.focus();
-    //   await user.click(triggerButton);
+      triggerButton.focus();
+      await user.keyboard("{Enter}");
 
-    //   const { unmount, getCloseButton } = renderModal(true);
-    //   await user.tab();
-    //   await user.tab();
+      expect(document.activeElement).toBe(triggerButton);
 
-    //   expect(triggerButton).not.toHaveFocus();
-    //   expect(getCloseButton()).toHaveFocus();
+      const { unmount } = renderModal(true);
 
-    //   unmount();
+      await user.tab();
 
-    //   expect(triggerButton).toHaveFocus();
-    // });
+      await waitFor(() => {
+        expect(document.activeElement).not.toBe(triggerButton);
+        expect(document.activeElement).toBe(
+          screen.getByLabelText("Close Modal")
+        );
+      });
+
+      await user.keyboard("{Escape}");
+      unmount();
+
+      await waitFor(() => {
+        expect(document.activeElement).toBe(triggerButton);
+      });
+
+      document.body.removeChild(triggerButton);
+    });
   });
 });
