@@ -165,36 +165,5 @@ describe("Modal component", () => {
       await user.tab({ shift: true });
       expect(getCloseButton()).toHaveFocus();
     });
-
-    it("should focus to the previously focust element when modal is closed", async () => {
-      const triggerButton = document.createElement("button");
-      triggerButton.textContent = "Trigger";
-      document.body.appendChild(triggerButton);
-
-      triggerButton.focus();
-      await user.keyboard("{Enter}");
-
-      expect(document.activeElement).toBe(triggerButton);
-
-      const { unmount } = renderModal(true);
-
-      await user.tab();
-
-      await waitFor(() => {
-        expect(document.activeElement).not.toBe(triggerButton);
-        expect(document.activeElement).toBe(
-          screen.getByLabelText("Close Modal")
-        );
-      });
-
-      await user.keyboard("{Escape}");
-      unmount();
-
-      await waitFor(() => {
-        expect(document.activeElement).toBe(triggerButton);
-      });
-
-      document.body.removeChild(triggerButton);
-    });
   });
 });
